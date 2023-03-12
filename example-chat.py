@@ -9,6 +9,7 @@ import fire
 import time
 import json
 from pathlib import Path
+
 from llama import ModelArgs, Transformer, Tokenizer, LLaMA
 
 
@@ -28,10 +29,10 @@ def load(
     model_args: ModelArgs = ModelArgs(
         max_seq_len=max_seq_len, max_batch_size=max_batch_size, **params
     )
-
+    print("Loading tokenizer")
     tokenizer = Tokenizer(model_path=tokenizer_path)
     model_args.vocab_size = tokenizer.n_words
-
+    print("Loading model")
     model = Transformer(model_args)
 
     # Original copyright by tloen
@@ -83,25 +84,40 @@ def main(
         ckpt_dir: str = './model',
         tokenizer_path: str = './tokenizer/tokenizer.model',
         temperature: float = 0.8,
-        top_p: float = 0.95,
-        max_seq_len: int = 512,
-        max_batch_size: int = 32,
+        top_p: float = 0.95,  # use 0.95 or so for top_p sampler, and 0.0 for top_k sampler
+        top_k: int = 40,
+        repetition_penalty: float = (1.0 / 0.85),  # 1.0 to disable repetition_penalty
+        sampler: str = 'top_p',  # top_p or top_k
+        max_seq_len: int = 2048,
+        max_batch_size: int = 1,
 ):
     # torch.manual_seed(1)
     # torch.set_default_dtype(torch.bfloat16)
 
     generator = load(ckpt_dir, tokenizer_path, max_seq_len, max_batch_size)
 
-    while True:
-        prompt = input(f'prompt> ')
-        if len(prompt.strip()) > 0:
-            prompts = [prompt]
-            results = generator.generate(
-                prompts, max_gen_len=256, temperature=temperature, top_p=top_p
-            )
+    ctx = """A dialog, where User interacts with AI. AI is helpful, kind, obedient, honest, and knows its own limits.
+User: Hello, AI.
+AI: Hello! How can I assist you today?
+"""
 
-            for result in results:
-                print(result)
+    while True:
+        prompt = input(f'User: ')
+        if ctx != "":
+            ctx = ctx + "User: " + prompt + "\n"
+        else:
+            ctx = prompt + "\n"
+
+        ctx = (ctx[-1920:]) if len(ctx) >= 2048 else ctx
+
+        if len(ctx.strip()) > 0:
+            prompts = [ctx]
+            results = generator.generate(
+                # somehow it did not find top_k?
+                prompts, max_gen_len=max_seq_len, temperature=temperature, top_p=top_p, top_k=top_k, repetition_penalty=repetition_penalty, sampler=sampler
+#                prompts, max_gen_len=max_seq_len, temperature=temperature, top_p=top_p, repetition_penalty=repetition_penalty, sampler=sampler
+            )
+            ctx = results[0]
 
 
 if __name__ == "__main__":
