@@ -59,6 +59,7 @@ def write_model(input_base_path, model_size):
     state_dict = {}
 
     for layer_i in range(n_layers):
+        print("loading layer "+str(layer_i)+" of "+str(n_layers))
         if model_size == "7B":
             state_dict |= {
                 f"layers.{layer_i}.attention.wq.weight": loaded[
