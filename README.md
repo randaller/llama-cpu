@@ -6,7 +6,7 @@ This repository is intended as a minimal, hackable and readable example to load 
 
 It is better to use another repo if you have NVIDIA card: https://github.com/randaller/llama-chat
 
-If you wish to **train the models on CPU only**, use HF version here: https://github.com/randaller/llama-chat#hugging-face--version
+If you wish to **train the models on CPU only**, use HF version here: https://github.com/randaller/llama-chat#hugging-face--version-inference--training
 
 ### Conda Environment Setup Example for Windows 10+
 Download and install Anaconda Python https://www.anaconda.com and run Anaconda Prompt
